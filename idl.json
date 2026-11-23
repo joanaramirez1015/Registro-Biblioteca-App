@@ -1,274 +1,609 @@
 {
-  "version": "0.1.0",
-  "name": "registro",
+  "address": "5gC5fZfCMsjUWvnDJbSG7F5BCqxrvUvsNTxwAbj5onA6",
   "metadata": {
-    "address": "38oTMyvUTmqkBQeMiuok5F2mPjp9dVadWdBeQTDNmTUY"
+    "name": "biblioteca",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "crearRegistro",
+      "name": "cambiar_dias",
+      "discriminator": [
+        213,
+        71,
+        233,
+        34,
+        81,
+        99,
+        121,
+        71
+      ],
       "accounts": [
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
         },
         {
-          "name": "registro",
-          "isMut": true,
-          "isSigner": false
+          "name": "biblioteca"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "libro",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prestamo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  115,
+                  116,
+                  97,
+                  109,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "libro"
+              },
+              {
+                "kind": "arg",
+                "path": "socio"
+              }
+            ]
+          }
         }
       ],
       "args": [
         {
-          "name": "nombreNegocio",
-          "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "crearCliente",
-      "accounts": [
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "registro",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "cliente",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "nombre",
-          "type": "string"
-        }
-      ]
-    },
-    {
-      "name": "registrarVenta",
-      "accounts": [
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "registro",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "cliente",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "venta",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "idCliente",
+          "name": "_id_libro",
           "type": "u16"
         },
         {
-          "name": "sku",
+          "name": "socio",
           "type": "string"
         },
         {
-          "name": "descripcion",
-          "type": "string"
-        },
-        {
-          "name": "monto",
-          "type": "u32"
+          "name": "nuevos_dias",
+          "type": "u8"
         }
       ]
     },
     {
-      "name": "hacerDevolucion",
+      "name": "crear_biblioteca",
+      "discriminator": [
+        240,
+        50,
+        132,
+        205,
+        92,
+        245,
+        20,
+        198
+      ],
       "accounts": [
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "registro",
-          "isMut": false,
-          "isSigner": false
+          "name": "biblioteca",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  105,
+                  98,
+                  108,
+                  105,
+                  111,
+                  116,
+                  101,
+                  99,
+                  97
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "nombre_biblioteca"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
         },
         {
-          "name": "cliente",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "venta",
-          "isMut": true,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "idCliente",
-          "type": "u16"
-        },
-        {
-          "name": "sku",
+          "name": "nombre_biblioteca",
           "type": "string"
         }
       ]
     },
     {
-      "name": "cambiarMonto",
+      "name": "crear_libro",
+      "discriminator": [
+        131,
+        236,
+        35,
+        41,
+        83,
+        178,
+        215,
+        241
+      ],
       "accounts": [
         {
           "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
         },
         {
-          "name": "registro",
-          "isMut": false,
-          "isSigner": false
+          "name": "biblioteca",
+          "writable": true
         },
         {
-          "name": "cliente",
-          "isMut": false,
-          "isSigner": false
+          "name": "libro",
+          "writable": true
         },
         {
-          "name": "venta",
-          "isMut": true,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "idCliente",
-          "type": "u16"
-        },
-        {
-          "name": "sku",
+          "name": "titulo",
           "type": "string"
         },
         {
-          "name": "nuevoMonto",
-          "type": "u32"
+          "name": "autor",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "eliminar_libro",
+      "discriminator": [
+        131,
+        109,
+        56,
+        244,
+        173,
+        11,
+        206,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca",
+          "writable": true
+        },
+        {
+          "name": "libro",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "id_libro",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "registrar_devolucion",
+      "discriminator": [
+        104,
+        254,
+        112,
+        175,
+        103,
+        144,
+        58,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca"
+        },
+        {
+          "name": "libro",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prestamo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  115,
+                  116,
+                  97,
+                  109,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "libro"
+              },
+              {
+                "kind": "arg",
+                "path": "socio"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_id_libro",
+          "type": "u16"
+        },
+        {
+          "name": "socio",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "registrar_prestamo",
+      "discriminator": [
+        108,
+        124,
+        157,
+        215,
+        169,
+        250,
+        159,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca"
+        },
+        {
+          "name": "libro",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prestamo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  115,
+                  116,
+                  97,
+                  109,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "libro"
+              },
+              {
+                "kind": "arg",
+                "path": "socio"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_id_libro",
+          "type": "u16"
+        },
+        {
+          "name": "socio",
+          "type": "string"
+        },
+        {
+          "name": "nota",
+          "type": "string"
+        },
+        {
+          "name": "dias",
+          "type": "u8"
         }
       ]
     }
   ],
   "accounts": [
     {
-      "name": "Registro",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "nombreNegocio",
-            "type": "string"
-          },
-          {
-            "name": "clientes",
-            "type": {
-              "vec": "publicKey"
-            }
-          },
-          {
-            "name": "idCounter",
-            "type": "u16"
-          }
-        ]
-      }
+      "name": "Biblioteca",
+      "discriminator": [
+        15,
+        189,
+        171,
+        42,
+        74,
+        187,
+        228,
+        54
+      ]
     },
     {
-      "name": "Cliente",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "idCliente",
-            "type": "u16"
-          },
-          {
-            "name": "nombre",
-            "type": "string"
-          },
-          {
-            "name": "compras",
-            "type": "u16"
-          },
-          {
-            "name": "historial",
-            "type": {
-              "vec": "publicKey"
-            }
-          }
-        ]
-      }
+      "name": "Libro",
+      "discriminator": [
+        173,
+        33,
+        156,
+        18,
+        93,
+        208,
+        117,
+        57
+      ]
     },
     {
-      "name": "Venta",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "sku",
-            "type": "string"
-          },
-          {
-            "name": "descripcion",
-            "type": "string"
-          },
-          {
-            "name": "monto",
-            "type": "u32"
-          }
-        ]
-      }
+      "name": "Prestamo",
+      "discriminator": [
+        32,
+        130,
+        53,
+        121,
+        130,
+        244,
+        134,
+        115
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
       "name": "NoOwner",
-      "msg": "Error, no eres el owner del registro"
+      "msg": "Error, no eres el owner de la biblioteca"
     },
     {
       "code": 6001,
-      "name": "NoSKU",
-      "msg": "Error, la venta no esta en el historial del cliente"
+      "name": "LimiteAlcanzado",
+      "msg": "Error, se alcanzo el limite de 10 elementos"
+    },
+    {
+      "code": 6002,
+      "name": "PrestamoNoExiste",
+      "msg": "Error, el prestamo no esta en la lista del libro"
+    },
+    {
+      "code": 6003,
+      "name": "LibroNoExiste",
+      "msg": "Error, el libro no esta en la lista de la biblioteca"
+    },
+    {
+      "code": 6004,
+      "name": "LibroConPrestamos",
+      "msg": "Error, el libro tiene prestamos activos"
+    }
+  ],
+  "types": [
+    {
+      "name": "Biblioteca",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "nombre_biblioteca",
+            "type": "string"
+          },
+          {
+            "name": "libros",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "id_counter",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Libro",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id_libro",
+            "type": "u16"
+          },
+          {
+            "name": "titulo",
+            "type": "string"
+          },
+          {
+            "name": "autor",
+            "type": "string"
+          },
+          {
+            "name": "total_prestamos",
+            "type": "u16"
+          },
+          {
+            "name": "prestamos",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prestamo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "socio",
+            "type": "string"
+          },
+          {
+            "name": "nota",
+            "type": "string"
+          },
+          {
+            "name": "dias",
+            "type": "u8"
+          }
+        ]
+      }
     }
   ]
 }

@@ -1,14 +1,15 @@
 import { address, createNoopSigner, type Address } from '@solana/kit';
 import type { Connection } from '@solana/web3.js';
 import {
-  getCrearRegistroInstruction, getCrearClienteInstruction,
-  getRegistrarVentaInstruction, getCambiarMontoInstruction, getHacerDevolucionInstruction,
+  getCrearBibliotecaInstruction, getCrearLibroInstruction,
+  getRegistrarPrestamoInstruction, getCambiarDiasInstruction,
+  getRegistrarDevolucionInstruction, getEliminarLibroInstruction,
 } from '../../clients/js/src/generated';
-import { cadena, pdaCliente, pdaRegistro } from './pdas';
-import { siguienteId } from './lecturas';
+import { cadena, cadenaLibro, pdaBiblioteca, pdaLibro } from './pdas';
+import { siguienteId, comprobarCupoPrestamos } from './lecturas';
 import { enviar, type WalletFirma, type OpcionesEnvio } from './tx';
 import { comprobarConfiguracion } from './seguridad';
-import { negocioValido, nombreValido, skuValido, descripcionValida, idValido, montoValido } from './validaciones';
+import { bibliotecaValida, tituloValido, autorValido, socioValido, notaValida, idValido, diasValidos } from './validaciones';
 
 export function direccionDe(wallet: Pick<WalletFirma, 'publicKey'>): Address {
   if (!wallet.publicKey) throw new Error('Conecta tu wallet primero.');
@@ -22,57 +23,66 @@ function firmante(wallet: WalletFirma) {
   return createNoopSigner(direccionDe(wallet));
 }
 
-/** Ejemplo resuelto: identidad, cuentas, instrucción y envío. */
-export async function crearRegistro(wallet: WalletFirma, connection: Connection, nombreNegocio: string, opciones?: OpcionesEnvio): Promise<string> {
-  nombreNegocio = negocioValido(nombreNegocio);
+export async function crearBiblioteca(wallet: WalletFirma, connection: Connection, nombreBiblioteca: string, opciones?: OpcionesEnvio): Promise<string> {
+  nombreBiblioteca = bibliotecaValida(nombreBiblioteca);
   const owner = firmante(wallet);
-  const registro = pdaRegistro(nombreNegocio, owner.address);
-  const ix = getCrearRegistroInstruction({ owner, registro, nombreNegocio });
+  const biblioteca = pdaBiblioteca(nombreBiblioteca, owner.address);
+  const ix = getCrearBibliotecaInstruction({ owner, biblioteca, nombreBiblioteca });
   return enviar(ix, wallet, connection, opciones);
 }
 
-/** Ejercicio 1 del día 4: crear la cuenta Cliente y actualizar Registro. */
-export async function crearCliente(wallet: WalletFirma, connection: Connection, nombreNegocio: string, nombre: string, opciones?: OpcionesEnvio): Promise<string> {
-  nombreNegocio = negocioValido(nombreNegocio);
-  nombre = nombreValido(nombre);
+// El id del libro lo asigna el programa (id_counter + 1): hay que leerlo ANTES de derivar la PDA.
+export async function crearLibro(wallet: WalletFirma, connection: Connection, nombreBiblioteca: string, titulo: string, autor: string, opciones?: OpcionesEnvio): Promise<string> {
+  nombreBiblioteca = bibliotecaValida(nombreBiblioteca);
+  titulo = tituloValido(titulo);
+  autor = autorValido(autor);
   const owner = firmante(wallet);
-  const registro = pdaRegistro(nombreNegocio, owner.address);
-  const id = await siguienteId(nombreNegocio, owner.address);
-  const cliente = pdaCliente(registro, id);
-  const ix = getCrearClienteInstruction({ owner, registro, cliente, nombre });
+  const biblioteca = pdaBiblioteca(nombreBiblioteca, owner.address);
+  const id = await siguienteId(nombreBiblioteca, owner.address); // tambien comprueba el cupo de libros
+  const libro = pdaLibro(biblioteca, id);
+  const ix = getCrearLibroInstruction({ owner, biblioteca, libro, titulo, autor });
   return enviar(ix, wallet, connection, opciones);
 }
 
-/** Ejercicio 2: mismo patrón con una Venta que depende del Cliente. */
-export async function registrarVenta(wallet: WalletFirma, connection: Connection, nombreNegocio: string, idCliente: number, sku: string, descripcion: string, monto: number, opciones?: OpcionesEnvio): Promise<string> {
-  nombreNegocio = negocioValido(nombreNegocio);
-  idCliente = idValido(idCliente);
-  sku = skuValido(sku);
-  descripcion = descripcionValida(descripcion);
-  monto = montoValido(monto);
+export async function registrarPrestamo(wallet: WalletFirma, connection: Connection, nombreBiblioteca: string, idLibro: number, socio: string, nota: string, dias: number, opciones?: OpcionesEnvio): Promise<string> {
+  nombreBiblioteca = bibliotecaValida(nombreBiblioteca);
+  idLibro = idValido(idLibro);
+  socio = socioValido(socio);
+  nota = notaValida(nota);
+  dias = diasValidos(dias);
   const owner = firmante(wallet);
-  const { registro, cliente, venta } = cadena(nombreNegocio, owner.address, idCliente, sku);
-  const ix = getRegistrarVentaInstruction({ owner, registro, cliente, venta, idCliente, sku, descripcion, monto });
+  const { biblioteca, libro, prestamo } = cadena(nombreBiblioteca, owner.address, idLibro, socio);
+  await comprobarCupoPrestamos(libro);
+  const ix = getRegistrarPrestamoInstruction({ owner, biblioteca, libro, prestamo, idLibro, socio, nota, dias });
   return enviar(ix, wallet, connection, opciones);
 }
 
-export async function cambiarMonto(wallet: WalletFirma, connection: Connection, nombreNegocio: string, idCliente: number, sku: string, nuevoMonto: number, opciones?: OpcionesEnvio): Promise<string> {
-  nombreNegocio = negocioValido(nombreNegocio);
-  idCliente = idValido(idCliente);
-  sku = skuValido(sku);
-  nuevoMonto = montoValido(nuevoMonto);
+export async function cambiarDias(wallet: WalletFirma, connection: Connection, nombreBiblioteca: string, idLibro: number, socio: string, nuevosDias: number, opciones?: OpcionesEnvio): Promise<string> {
+  nombreBiblioteca = bibliotecaValida(nombreBiblioteca);
+  idLibro = idValido(idLibro);
+  socio = socioValido(socio);
+  nuevosDias = diasValidos(nuevosDias);
   const owner = firmante(wallet);
-  const { registro, cliente, venta } = cadena(nombreNegocio, owner.address, idCliente, sku);
-  const ix = getCambiarMontoInstruction({ owner, registro, cliente, venta, idCliente, sku, nuevoMonto });
+  const { biblioteca, libro, prestamo } = cadena(nombreBiblioteca, owner.address, idLibro, socio);
+  const ix = getCambiarDiasInstruction({ owner, biblioteca, libro, prestamo, idLibro, socio, nuevosDias });
   return enviar(ix, wallet, connection, opciones);
 }
 
-export async function hacerDevolucion(wallet: WalletFirma, connection: Connection, nombreNegocio: string, idCliente: number, sku: string, opciones?: OpcionesEnvio): Promise<string> {
-  nombreNegocio = negocioValido(nombreNegocio);
-  idCliente = idValido(idCliente);
-  sku = skuValido(sku);
+export async function registrarDevolucion(wallet: WalletFirma, connection: Connection, nombreBiblioteca: string, idLibro: number, socio: string, opciones?: OpcionesEnvio): Promise<string> {
+  nombreBiblioteca = bibliotecaValida(nombreBiblioteca);
+  idLibro = idValido(idLibro);
+  socio = socioValido(socio);
   const owner = firmante(wallet);
-  const { registro, cliente, venta } = cadena(nombreNegocio, owner.address, idCliente, sku);
-  const ix = getHacerDevolucionInstruction({ owner, registro, cliente, venta, idCliente, sku });
+  const { biblioteca, libro, prestamo } = cadena(nombreBiblioteca, owner.address, idLibro, socio);
+  const ix = getRegistrarDevolucionInstruction({ owner, biblioteca, libro, prestamo, idLibro, socio });
+  return enviar(ix, wallet, connection, opciones);
+}
+
+export async function eliminarLibro(wallet: WalletFirma, connection: Connection, nombreBiblioteca: string, idLibro: number, opciones?: OpcionesEnvio): Promise<string> {
+  nombreBiblioteca = bibliotecaValida(nombreBiblioteca);
+  idLibro = idValido(idLibro);
+  const owner = firmante(wallet);
+  const { biblioteca, libro } = cadenaLibro(nombreBiblioteca, owner.address, idLibro);
+  const ix = getEliminarLibroInstruction({ owner, biblioteca, libro, idLibro });
   return enviar(ix, wallet, connection, opciones);
 }

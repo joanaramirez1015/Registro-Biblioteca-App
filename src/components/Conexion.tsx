@@ -32,7 +32,7 @@ export function Conexion({ revision }: { revision: number }) {
       </section>
       <SaldoPublico />
     </div>
-    <aside className="explanation"><strong>Leer y firmar son acciones distintas.</strong><p>Consultar una dirección pública no requiere conectar una wallet. Para modificar el registro, la autoridad correspondiente deberá firmar.</p><a href="https://faucet.solana.com/" target="_blank" rel="noreferrer">Obtener SOL de prueba</a></aside>
+    <aside className="explanation"><strong>Leer y firmar son acciones distintas.</strong><p>Consultar una dirección pública no requiere conectar una wallet. Para modificar la biblioteca, la autoridad correspondiente deberá firmar.</p><a href="https://faucet.solana.com/" target="_blank" rel="noreferrer">Obtener SOL de prueba</a></aside>
   </>;
 }
 

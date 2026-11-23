@@ -23,6 +23,8 @@ import {
   getStructEncoder,
   getU32Decoder,
   getU32Encoder,
+  getU8Decoder,
+  getU8Encoder,
   getUtf8Decoder,
   getUtf8Encoder,
   transformEncoder,
@@ -43,116 +45,116 @@ import {
   type ReadonlyUint8Array,
 } from "@solana/kit";
 
-export const VENTA_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
-  46, 19, 228, 71, 14, 149, 86, 78,
+export const PRESTAMO_DISCRIMINATOR: ReadonlyUint8Array = new Uint8Array([
+  32, 130, 53, 121, 130, 244, 134, 115,
 ]);
 
-export function getVentaDiscriminatorBytes(): ReadonlyUint8Array {
-  return fixEncoderSize(getBytesEncoder(), 8).encode(VENTA_DISCRIMINATOR);
+export function getPrestamoDiscriminatorBytes(): ReadonlyUint8Array {
+  return fixEncoderSize(getBytesEncoder(), 8).encode(PRESTAMO_DISCRIMINATOR);
 }
 
-export type Venta = {
+export type Prestamo = {
   discriminator: ReadonlyUint8Array;
-  sku: string;
-  descripcion: string;
-  monto: number;
+  socio: string;
+  nota: string;
+  dias: number;
 };
 
-export type VentaArgs = { sku: string; descripcion: string; monto: number };
+export type PrestamoArgs = { socio: string; nota: string; dias: number };
 
-/** Gets the encoder for {@link VentaArgs} account data. */
-export function getVentaEncoder(): Encoder<VentaArgs> {
+/** Gets the encoder for {@link PrestamoArgs} account data. */
+export function getPrestamoEncoder(): Encoder<PrestamoArgs> {
   return transformEncoder(
     getStructEncoder([
       ["discriminator", fixEncoderSize(getBytesEncoder(), 8)],
-      ["sku", addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
-      ["descripcion", addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
-      ["monto", getU32Encoder()],
+      ["socio", addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ["nota", addEncoderSizePrefix(getUtf8Encoder(), getU32Encoder())],
+      ["dias", getU8Encoder()],
     ]),
-    (value) => ({ ...value, discriminator: VENTA_DISCRIMINATOR }),
+    (value) => ({ ...value, discriminator: PRESTAMO_DISCRIMINATOR }),
   );
 }
 
-/** Gets the decoder for {@link Venta} account data. */
-export function getVentaDecoder(): Decoder<Venta> {
+/** Gets the decoder for {@link Prestamo} account data. */
+export function getPrestamoDecoder(): Decoder<Prestamo> {
   return getStructDecoder([
     ["discriminator", fixDecoderSize(getBytesDecoder(), 8)],
-    ["sku", addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
-    ["descripcion", addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
-    ["monto", getU32Decoder()],
+    ["socio", addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ["nota", addDecoderSizePrefix(getUtf8Decoder(), getU32Decoder())],
+    ["dias", getU8Decoder()],
   ]);
 }
 
-/** Gets the codec for {@link Venta} account data. */
-export function getVentaCodec(): Codec<VentaArgs, Venta> {
-  return combineCodec(getVentaEncoder(), getVentaDecoder());
+/** Gets the codec for {@link Prestamo} account data. */
+export function getPrestamoCodec(): Codec<PrestamoArgs, Prestamo> {
+  return combineCodec(getPrestamoEncoder(), getPrestamoDecoder());
 }
 
-export function decodeVenta<TAddress extends string = string>(
+export function decodePrestamo<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress>,
-): Account<Venta, TAddress>;
-export function decodeVenta<TAddress extends string = string>(
+): Account<Prestamo, TAddress>;
+export function decodePrestamo<TAddress extends string = string>(
   encodedAccount: MaybeEncodedAccount<TAddress>,
-): MaybeAccount<Venta, TAddress>;
-export function decodeVenta<TAddress extends string = string>(
+): MaybeAccount<Prestamo, TAddress>;
+export function decodePrestamo<TAddress extends string = string>(
   encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>,
-): Account<Venta, TAddress> | MaybeAccount<Venta, TAddress> {
+): Account<Prestamo, TAddress> | MaybeAccount<Prestamo, TAddress> {
   return decodeAccount(
     encodedAccount as MaybeEncodedAccount<TAddress>,
-    getVentaDecoder(),
+    getPrestamoDecoder(),
   );
 }
 
-export async function fetchVenta<TAddress extends string = string>(
+export async function fetchPrestamo<TAddress extends string = string>(
   rpc:
     | Parameters<typeof fetchEncodedAccount>[0]
     | ClientWithRpc<GetAccountInfoApi>,
   address: Address<TAddress> | HasAddress<TAddress>,
   config?: FetchAccountConfig,
-): Promise<Account<Venta, TAddress>> {
-  const maybeAccount = await fetchMaybeVenta(rpc, address, config);
+): Promise<Account<Prestamo, TAddress>> {
+  const maybeAccount = await fetchMaybePrestamo(rpc, address, config);
   assertAccountExists(maybeAccount);
   return maybeAccount;
 }
 
-export async function fetchMaybeVenta<TAddress extends string = string>(
+export async function fetchMaybePrestamo<TAddress extends string = string>(
   rpc:
     | Parameters<typeof fetchEncodedAccount>[0]
     | ClientWithRpc<GetAccountInfoApi>,
   address: Address<TAddress> | HasAddress<TAddress>,
   config?: FetchAccountConfig,
-): Promise<MaybeAccount<Venta, TAddress>> {
+): Promise<MaybeAccount<Prestamo, TAddress>> {
   const maybeAccount = await fetchEncodedAccount(
     "rpc" in rpc ? rpc.rpc : rpc,
     typeof address === "string" ? address : address.address,
     config,
   );
-  return decodeVenta(maybeAccount);
+  return decodePrestamo(maybeAccount);
 }
 
-export async function fetchAllVenta(
+export async function fetchAllPrestamo(
   rpc:
     | Parameters<typeof fetchEncodedAccounts>[0]
     | ClientWithRpc<GetMultipleAccountsApi>,
   addresses: Array<Address | HasAddress>,
   config?: FetchAccountsConfig,
-): Promise<Account<Venta>[]> {
-  const maybeAccounts = await fetchAllMaybeVenta(rpc, addresses, config);
+): Promise<Account<Prestamo>[]> {
+  const maybeAccounts = await fetchAllMaybePrestamo(rpc, addresses, config);
   assertAccountsExist(maybeAccounts);
   return maybeAccounts;
 }
 
-export async function fetchAllMaybeVenta(
+export async function fetchAllMaybePrestamo(
   rpc:
     | Parameters<typeof fetchEncodedAccounts>[0]
     | ClientWithRpc<GetMultipleAccountsApi>,
   addresses: Array<Address | HasAddress>,
   config?: FetchAccountsConfig,
-): Promise<MaybeAccount<Venta>[]> {
+): Promise<MaybeAccount<Prestamo>[]> {
   const maybeAccounts = await fetchEncodedAccounts(
     "rpc" in rpc ? rpc.rpc : rpc,
     addresses.map((a) => (typeof a === "string" ? a : a.address)),
     config,
   );
-  return maybeAccounts.map((maybeAccount) => decodeVenta(maybeAccount));
+  return maybeAccounts.map((maybeAccount) => decodePrestamo(maybeAccount));
 }
