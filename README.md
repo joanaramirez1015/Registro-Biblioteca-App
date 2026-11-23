@@ -1,178 +1,127 @@
-# Registro de Ventas · App
+# Biblioteca en Solana: libros y préstamos con PDAs
 
-![Registro de Ventas · App — Solana, TypeScript y React](./images/banner-app.png)
+Proyecto final del **Solana Engineering Track (Advanced / Etapa 2) – WayLearn**.
 
-Frontend educativo desarrollado con **TypeScript y React** para interactuar con el programa [Registro de Ventas con PDAs](https://github.com/WayLearnLatam/Registro-Ventas-Solana-PDA) en **Solana Devnet**.
+| | |
+|---|---|
+| **Autora** | Ramirez Peguero Joana Arizbeth |
+| **Correo de registro** | 2524260108@e.uttecamac.edu.mx |
+| **Ruta elegida** | Proyecto propio (adaptado del template Registro-Ventas) |
+| **Red** | Solana Devnet |
+| **Program ID** | `5gC5fZfCMsjUWvnDJbSG7F5BCqxrvUvsNTxwAbj5onA6` |
+| **Explorer** | https://explorer.solana.com/address/5gC5fZfCMsjUWvnDJbSG7F5BCqxrvUvsNTxwAbj5onA6?cluster=devnet |
 
-Forma parte del **Solana Engineering Track: Advanced** de WayLearn. Aquí conectamos lo aprendido sobre cuentas, instrucciones y PDAs con una aplicación que se utiliza desde el navegador.
+## Propósito
 
-Puedes comenzar haciendo **Fork** de este repositorio. Hemos preparado un entorno de **GitHub Codespaces** para que puedas concentrarte en los ejercicios sin instalar las herramientas del frontend en tu computadora. 🚀
+Programa de Solana (Anchor) que administra una biblioteca: la dueña de la biblioteca registra **libros** y, por cada libro, los **préstamos** a sus socios. Un frontend con wallet (Phantom) permite crear, consultar, modificar y cerrar cada cuenta desde el navegador.
 
-> 📖 Sigue las explicaciones y actividades en el [GitBook de Advanced](https://waylearn.gitbook.io/solana-engineering-track-advanced).
+El proyecto parte de los templates del curso (`Registro-Ventas-Solana-PDA` y `Registro-Ventas-Solana-App`), pero modela un dominio distinto con sus propias reglas.
 
-## ¿Qué puedes hacer con la app?
+## Aporte propio
 
-- Conectar una wallet y consultar saldos de Devnet.
-- Consultar un registro de ventas, sus clientes y las ventas activas de cada uno.
-- Crear un negocio y dar de alta a sus clientes.
-- Registrar ventas, corregir su importe y realizar devoluciones.
-- Revisar solicitudes de firma, confirmaciones y errores de las transacciones.
+1. **Dominio nuevo:** Biblioteca → Libro → Préstamo, en lugar de Registro → Cliente → Venta.
+2. **Regla de negocio en el programa:** un libro **no se puede eliminar mientras tenga préstamos activos** (error `LibroConPrestamos`). Así no quedan préstamos huérfanos.
+3. **Id automático para los libros:** el programa asigna el id con un contador (`id_counter`) guardado en la biblioteca. Los ids no se reutilizan al eliminar.
+4. **Préstamo identificado por texto:** la PDA se deriva con el `socio`, por lo que un socio no puede tener dos préstamos del mismo libro a la vez.
+5. **Operación de modificación:** `cambiar_dias` (renovar un préstamo) registra con `msg!` el valor anterior y el nuevo.
+6. **Límite controlado:** cada lista admite máximo 10 elementos y el programa lo valida antes de guardar (`LimiteAlcanzado`).
 
-El recorrido del proyecto sigue esta relación:
+## Reglas de seguridad aplicadas en el programa
 
-**Registro del negocio → Clientes → Ventas**
+| Regla | Cómo se aplica |
+|---|---|
+| **Autoridad** | `has_one = owner @ Errores::NoOwner` en la biblioteca en todas las instrucciones, excepto en la que crea la raíz |
+| **Pertenencia** | Cada cuenta se deriva de su padre con `seeds` + `bump`, y cada contexto incluye la cadena completa de cuentas |
+| **Cierre de cuentas** | `close = owner` en `devolver_prestamo` y `eliminar_libro`; la renta regresa a la wallet |
+| **Cierre condicionado** | `eliminar_libro` exige `prestamos.is_empty()` |
+| **Vectores consistentes** | Al cerrar una cuenta se quita su PDA del vector del padre y se actualiza el contador |
 
-Cada entidad tiene su propia cuenta. El frontend deriva sus direcciones y utiliza el cliente generado a partir del IDL para leer datos y construir instrucciones.
+## Estructura de cuentas (PDAs)
 
-> ℹ️ El importe de una venta es un dato del ejercicio: **no cobra ni transfiere SOL o tokens**. La devolución elimina la venta del historial activo y cierra su cuenta; no realiza un reembolso comercial.
+```
+Biblioteca <- [b"biblioteca", nombre_biblioteca, owner]   raíz
+ └─ Libro <- [b"libro", biblioteca, id_libro (u16, little-endian)]
+     └─ Prestamo <- [b"prestamo", libro, socio]
+```
 
-## Antes de comenzar
+| Cuenta | Campos |
+|---|---|
+| `Biblioteca` | `owner`, `nombre_biblioteca` (30), `libros` (Vec, máx. 10), `id_counter` (u16) |
+| `Libro` | `id_libro` (u16), `titulo` (40), `autor` (30), `total_prestamos` (u16), `prestamos` (Vec, máx. 10) |
+| `Prestamo` | `socio` (20), `nota` (50), `dias` (u8) |
 
-Necesitas una cuenta de GitHub y, para las operaciones que requieren firma, una wallet de navegador compatible con Solana y SOL de prueba en **Devnet**.
+Los textos se miden en **bytes**: un acento ocupa más de un byte.
 
-Es recomendable tener conocimientos básicos de JavaScript o TypeScript y haber revisado el modelo de cuentas del [programa base](https://github.com/WayLearnLatam/Registro-Ventas-Solana-PDA).
+## Instrucciones
 
-**No necesitas la Solana CLI para ejecutar este frontend.** Puedes trabajar con el programa desplegado desde Solana Playground.
+| Instrucción | Argumentos (en orden) | Qué hace |
+|---|---|---|
+| `crear_biblioteca` | `nombre_biblioteca` | Crea la raíz |
+| `crear_libro` | `nombre_biblioteca`, `titulo`, `autor` | Crea un libro con id automático y guarda su PDA en `libros` |
+| `registrar_prestamo` | `nombre_biblioteca`, `id_libro`, `socio`, `nota`, `dias` | Crea el préstamo, lo guarda en `prestamos` y suma 1 a `total_prestamos` |
+| `cambiar_dias` | `nombre_biblioteca`, `id_libro`, `socio`, `nuevos_dias` | Modifica los días del préstamo |
+| `devolver_prestamo` | `nombre_biblioteca`, `id_libro`, `socio` | Quita el préstamo del historial, resta 1 al contador y cierra la cuenta |
+| `eliminar_libro` | `nombre_biblioteca`, `id_libro` | Solo si no tiene préstamos: lo quita de `libros` y cierra la cuenta |
 
-## Comenzar con Codespaces
+Errores propios: `NoOwner`, `LimiteAlcanzado`, `LibroNoExiste`, `PrestamoNoExiste`, `LibroConPrestamos`.
 
-### 1. Crea tu copia
+## Estructura del repositorio
 
-Haz clic en **Fork**, en la parte superior de este repositorio, para crear una copia en tu cuenta. Así podrás guardar tus cambios y continuar con tu proyecto.
 
-### 2. Abre el entorno
+```
+programa/lib.rs        Programa Anchor (Rust)
+idl.json               IDL exportado del programa desplegado
+clients/js/            Cliente generado a partir del IDL
+src/                   Frontend (React + Vite)
+evidencias/            Capturas de las pruebas
+README.md
+```
 
-Desde tu copia, selecciona **Code → Codespaces → Create codespace on main**.
+## Cómo ejecutarlo
 
-Espera a que termine la preparación. El contenedor incluye Node 22 y ejecuta automáticamente la instalación de dependencias y la generación del cliente.
-
-### 3. Inicia la app
-
-En la terminal de Codespaces ejecuta:
+Requisitos: Node.js (LTS reciente), una wallet de navegador (Phantom) en **Devnet** con SOL de prueba.
 
 ```bash
+npm install
+npm run configurar:idl -- ./idl.json --program-id 5gC5fZfCMsjUWvnDJbSG7F5BCqxrvUvsNTxwAbj5onA6
+npm run typecheck
 npm run dev
 ```
 
-### 4. Ábrela en tu navegador
+Abre la URL que muestra la terminal (normalmente `http://localhost:5173`), conecta Phantom en Devnet y usa la misma wallet con la que creaste la biblioteca: es la `owner` y la única con permiso de escritura.
 
-En la pestaña **Ports / Puertos**, localiza el **5173** y selecciona **Open in Browser**.
+También se puede ejecutar en GitHub Codespaces con los mismos comandos.
 
-Abre la aplicación en una pestaña normal del navegador donde tienes instalada tu wallet. La vista incrustada del editor puede no detectar la extensión. El puerto puede permanecer privado; utiliza la misma cuenta de GitHub para acceder.
+## Cómo probarlo
 
-> 💡 Al terminar, detén el Codespace desde el menú de Codespaces para evitar consumir tiempo de cómputo mientras no lo utilizas.
+1. Conecta la wallet y crea una biblioteca.
+2. Crea un libro.
+3. Registra un préstamo para ese libro.
+4. Comprueba que las tablas muestran los datos leídos de la cadena.
+5. Cambia los `dias` del préstamo.
+6. Intenta eliminar el libro **con** préstamos: el programa lo rechaza (`LibroConPrestamos`).
+7. Devuelve el préstamo (se cierra la cuenta).
+8. Elimina el libro, ahora sin préstamos.
+9. Con **otra wallet**, intenta modificar la biblioteca: el programa rechaza (`NoOwner`).
 
-## Ejecutar en tu computadora
+## Evidencias
 
-Si prefieres trabajar en local, utiliza **Node.js 22.12 o superior de la rama 22** y npm. Clona tu fork o utiliza directamente el repositorio original:
+Capturas en la carpeta `evidencias/`. Transacciones en Devnet:
 
-```bash
-git clone https://github.com/WayLearnLatam/Registro-Ventas-Solana-App.git
-cd Registro-Ventas-Solana-App
-npm ci
-npm run cliente
-npm run dev
-```
+| # | Prueba | Transacción / captura |
+|---|---|---|
+| 1 | Programa desplegado | [Ver en Explorer](https://explorer.solana.com/address/5gC5fZfCMsjUWvnDJbSG7F5BCqxrvUvsNTxwAbj5onA6?cluster=devnet) |
+| 2 | Crear biblioteca | https://explorer.solana.com/tx/2n7go7CJtQNjBVX3nbA3STd8ronEB8ausoToT37uuKNjX2j6fEHqreCkZwy3x43gCBF6oSn28FvTCGQZzAmgwefU?cluster=devnet |
+| 3 | Crear libro | https://explorer.solana.com/tx/uDhMryUBG5T6sZrUHNnPhcw3RzxNStTAAq6eYVj5CU3bL8ySW1FSp7MFqKPiuTKrnfzsso1eXepLLaJspNxZBdf?cluster=devnet |
+| 4 | Registrar préstamo | https://explorer.solana.com/tx/5CjiwkWQk2Pmp1Xu7nwBczRMQ7HUy6byiwT31ee7BZhyixbEpjWj8nTexcrP9wJEJmSbLjL8oqnezVfY5ziY6BcP?cluster=devnet |
+| 5 | Cambiar días | https://explorer.solana.com/tx/DhW5LSYHc5z86iEi5aXS54m117UkKrjonM2Tssrje7sNCpNuoHpTh2LyeuVKqPPHBUMrXBCNMnGJoeZ44qe8NBe?cluster=devnet |
+| 6 | Eliminar libro con préstamos | ![alt text](images/1.png) |
+| 7 | Devolver préstamo  | https://explorer.solana.com/tx/5QjU7LVJy8EyB4e1LAKYWSRZCh5cV4nH6DtNT8SQxU4JvxciLUehFhac81v6Myg4z9mM3HSK8fETcdthNVPdqh2o?cluster=devnet |
+| 8 | Eliminar libro sin préstamos | https://explorer.solana.com/tx/4JLmM5qyVQ4yZuRccrqgDW5gey1mPih1nezT5WNGvoKVJpGAsKeNdXeZwV5nXsmoz5jK5abi6RXC3EVJHyfgH9Yp?cluster=devnet |
 
-Abre `http://localhost:5173` en el navegador con tu wallet instalada.
+## Notas
+- El programa se compiló y desplegó con <<Anchor en Codespaces>>.
 
-En Windows puedes ejecutar estos comandos desde WSL. El repositorio también incluye una configuración de Dev Container para VS Code, si ya utilizas Docker y la extensión Dev Containers.
+## Uso de herramientas de IA
 
-## Conectar el programa de Solana
-
-El frontend y el programa son dos partes del mismo proyecto:
-
-| Parte | Responsabilidad |
-| --- | --- |
-| [Programa Rust + Anchor](https://github.com/WayLearnLatam/Registro-Ventas-Solana-PDA) | Define las cuentas, ejecuta instrucciones y valida permisos. |
-| Este frontend | Lee cuentas, construye instrucciones y solicita a la wallet que firme las transacciones. |
-| IDL y cliente generado | Describen la interfaz del programa y permiten utilizarla desde TypeScript. |
-
-### Si aparece «programa de referencia»
-
-El repositorio incluye un **IDL de referencia** para estudiar la estructura y generar el cliente. Con esa configuración puedes conectar tu wallet y consultar saldos; la consulta del registro y sus operaciones permanecen bloqueadas hasta importar el IDL del despliegue que utilizarás.
-
-Si la versión de clase ya viene configurada para el programa correspondiente, puedes continuar con las actividades sin repetir este paso.
-
-### Importar tu IDL
-
-Exporta desde Playground el IDL del programa que realmente compilaste y desplegaste en **Devnet**. Coloca el JSON dentro de tu espacio de trabajo, por ejemplo en `tmp-idl/registro.json`, y ejecuta desde la raíz:
-
-```bash
-npm run configurar:idl -- ./tmp-idl/registro.json
-```
-
-Si el archivo no incluye la dirección del programa, agrega su Program ID público:
-
-```bash
-npm run configurar:idl -- ./tmp-idl/registro.json --program-id TU_PROGRAM_ID
-```
-
-El comando comprueba la estructura esperada, importa el IDL y regenera el cliente. Detén el servidor con `Ctrl+C` y vuelve a ejecutar `npm run dev` después de la importación.
-
-**No edites manualmente el cliente generado.** Si cambias el IDL, ejecuta `npm run cliente`. Conserva juntos en tu repositorio `idl.json`, `src/config/programa.json` y `clients/js/`.
-
-> 🔎 La wallet de Playground y la del navegador pueden ser distintas. Como la autoridad participa en la PDA, lo más sencillo es crear un negocio nuevo desde la app con la wallet del navegador. No necesitas trasladar claves privadas entre entornos.
-
-Consulta la [guía de IDL y Playground](./docs/IDL-Y-PLAYGROUND.md) si necesitas revisar la configuración.
-
-## Seguir las sesiones
-
-El proyecto utiliza el mismo frontend durante ambos días. Puedes elegir el punto de partida con estos comandos:
-
-| Comando | Qué prepara |
-| --- | --- |
-| `npm run clase:dia3` | Pantalla de conexión para explorar wallet, RPC, saldos e IDL. Reserva Registro para el día siguiente. |
-| `npm run clase:dia4` | Pantalla del registro con dos funciones por completar: `crearCliente` y `registrarVenta`. |
-| `npm run clase:resuelto` | Las cinco operaciones implementadas, como referencia para estudiar y contrastar. |
-
-Detén `npm run dev` antes de cambiar de modo y vuelve a iniciarlo al terminar.
-
-> **Guarda tu avance antes de cambiar de modo.** Estos comandos reemplazan `src/solana/acciones.ts`. Los cambios anteriores se respaldan en `.aula/respaldos/`; el IDL y el cliente generado se conservan. Puedes consultar la solución en `materiales/acciones-resuelto.ts.txt` sin reemplazar tu archivo.
-
-## ¿Dónde está cada cosa?
-
-| Ruta | Qué encontrarás |
-| --- | --- |
-| `src/components/` | Pantallas y formularios de la aplicación. |
-| `src/solana/acciones.ts` | Funciones que conectan los formularios con las instrucciones del programa. |
-| `src/solana/lecturas.ts` | Lectura de Registro, Cliente y Venta. |
-| `src/solana/pdas.ts` y `seeds.ts` | Derivación de las direcciones de las cuentas. |
-| `src/solana/tx.ts` | Preparación, envío, confirmación y errores de las transacciones. |
-| `src/config/interfaz.ts` | Título y valores iniciales para personalizar la demo. |
-| `idl.json` | IDL utilizado para generar el cliente del programa. |
-| `clients/js/src/generated/` | Código generado con Codama; no se modifica a mano. |
-| `materiales/` | Versión de ejercicio y solución de las operaciones. |
-| `docs/` | Guías de configuración, pruebas y alcance del ejemplo. |
-
-La base utiliza **React + Vite**, **TypeScript**, **Wallet Adapter**, **Solana Kit**, **web3.js** y **Codama**. La integración entre las librerías ya está preparada para que puedas concentrarte en el flujo de cuentas e instrucciones.
-
-## Probar tus cambios
-
-```bash
-npm run verificar
-```
-
-Este comando comprueba TypeScript, ejecuta las pruebas automatizadas y genera el build del frontend. Las pruebas automatizadas **no envían transacciones**: completa también el recorrido de [pruebas manuales en Devnet](./docs/PRUEBAS-MANUALES.md).
-
-Para tu primera prueba, crea un negocio, agrega un cliente, registra una venta y consulta el resultado. Después prueba corregir el importe, devolver la venta y cancelar una solicitud de firma.
-
-## Si algo no funciona
-
-| Situación | Qué revisar |
-| --- | --- |
-| La wallet no aparece | Abre la app en una pestaña normal del navegador con una extensión compatible instalada. |
-| Falta SOL de prueba | Solicítalo en [Solana Faucet](https://faucet.solana.com/), seleccionando Devnet. |
-| No aparece tu negocio | Comprueba el nombre exacto y la dirección de su autoridad; ambos participan en la PDA. |
-| No puedes repetir un SKU | Cada cliente solo puede tener una venta activa con ese SKU. |
-| El RPC responde con un límite de uso | Espera y vuelve a intentar, o configura otro endpoint de Devnet en `.env.local` siguiendo `.env.example`. |
-| Cambiaste el IDL y falla la comprobación | Ejecuta `npm run cliente` y reinicia el servidor. |
-
-## Recursos y comunidad
-
-- [GitBook de Solana Engineering Track: Advanced](https://waylearn.gitbook.io/solana-engineering-track-advanced).
-- [Programa Registro de Ventas con PDAs](https://github.com/WayLearnLatam/Registro-Ventas-Solana-PDA).
-- [Solana Playground](https://beta.solpg.io/).
-- [Comunidad de WayLearn en Discord](https://discord.gg/hvnpbZxu9b).
-
-Este es un proyecto educativo para **Devnet**. Las validaciones del formulario no sustituyen las restricciones del programa. Revisa [seguridad y alcance](./docs/SEGURIDAD-Y-ALCANCE.md) para conocer los límites del ejemplo y los aspectos que deben revisarse antes de producción.
+Usé los prompts del curso con un asistente de IA para adaptar el programa y el frontend al dominio de la biblioteca. Revisé el código, desplegué el programa y ejecuté las pruebas descritas arriba, y puedo explicar el funcionamiento de cada instrucción.
