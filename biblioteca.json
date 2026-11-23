@@ -1,0 +1,609 @@
+{
+  "address": "5gC5fZfCMsjUWvnDJbSG7F5BCqxrvUvsNTxwAbj5onA6",
+  "metadata": {
+    "name": "biblioteca",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "cambiar_dias",
+      "discriminator": [
+        213,
+        71,
+        233,
+        34,
+        81,
+        99,
+        121,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca"
+        },
+        {
+          "name": "libro",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prestamo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  115,
+                  116,
+                  97,
+                  109,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "libro"
+              },
+              {
+                "kind": "arg",
+                "path": "socio"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_id_libro",
+          "type": "u16"
+        },
+        {
+          "name": "socio",
+          "type": "string"
+        },
+        {
+          "name": "nuevos_dias",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "crear_biblioteca",
+      "discriminator": [
+        240,
+        50,
+        132,
+        205,
+        92,
+        245,
+        20,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "biblioteca",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  105,
+                  98,
+                  108,
+                  105,
+                  111,
+                  116,
+                  101,
+                  99,
+                  97
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "nombre_biblioteca"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nombre_biblioteca",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "crear_libro",
+      "discriminator": [
+        131,
+        236,
+        35,
+        41,
+        83,
+        178,
+        215,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca",
+          "writable": true
+        },
+        {
+          "name": "libro",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "titulo",
+          "type": "string"
+        },
+        {
+          "name": "autor",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "eliminar_libro",
+      "discriminator": [
+        131,
+        109,
+        56,
+        244,
+        173,
+        11,
+        206,
+        41
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca",
+          "writable": true
+        },
+        {
+          "name": "libro",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "id_libro",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "registrar_devolucion",
+      "discriminator": [
+        104,
+        254,
+        112,
+        175,
+        103,
+        144,
+        58,
+        8
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca"
+        },
+        {
+          "name": "libro",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prestamo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  115,
+                  116,
+                  97,
+                  109,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "libro"
+              },
+              {
+                "kind": "arg",
+                "path": "socio"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_id_libro",
+          "type": "u16"
+        },
+        {
+          "name": "socio",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "registrar_prestamo",
+      "discriminator": [
+        108,
+        124,
+        157,
+        215,
+        169,
+        250,
+        159,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "biblioteca"
+          ]
+        },
+        {
+          "name": "biblioteca"
+        },
+        {
+          "name": "libro",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  105,
+                  98,
+                  114,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "biblioteca"
+              },
+              {
+                "kind": "arg",
+                "path": "id_libro"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prestamo",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  115,
+                  116,
+                  97,
+                  109,
+                  111
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "libro"
+              },
+              {
+                "kind": "arg",
+                "path": "socio"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_id_libro",
+          "type": "u16"
+        },
+        {
+          "name": "socio",
+          "type": "string"
+        },
+        {
+          "name": "nota",
+          "type": "string"
+        },
+        {
+          "name": "dias",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Biblioteca",
+      "discriminator": [
+        15,
+        189,
+        171,
+        42,
+        74,
+        187,
+        228,
+        54
+      ]
+    },
+    {
+      "name": "Libro",
+      "discriminator": [
+        173,
+        33,
+        156,
+        18,
+        93,
+        208,
+        117,
+        57
+      ]
+    },
+    {
+      "name": "Prestamo",
+      "discriminator": [
+        32,
+        130,
+        53,
+        121,
+        130,
+        244,
+        134,
+        115
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NoOwner",
+      "msg": "Error, no eres el owner de la biblioteca"
+    },
+    {
+      "code": 6001,
+      "name": "LimiteAlcanzado",
+      "msg": "Error, se alcanzo el limite de 10 elementos"
+    },
+    {
+      "code": 6002,
+      "name": "PrestamoNoExiste",
+      "msg": "Error, el prestamo no esta en la lista del libro"
+    },
+    {
+      "code": 6003,
+      "name": "LibroNoExiste",
+      "msg": "Error, el libro no esta en la lista de la biblioteca"
+    },
+    {
+      "code": 6004,
+      "name": "LibroConPrestamos",
+      "msg": "Error, el libro tiene prestamos activos"
+    }
+  ],
+  "types": [
+    {
+      "name": "Biblioteca",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "nombre_biblioteca",
+            "type": "string"
+          },
+          {
+            "name": "libros",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "id_counter",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Libro",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id_libro",
+            "type": "u16"
+          },
+          {
+            "name": "titulo",
+            "type": "string"
+          },
+          {
+            "name": "autor",
+            "type": "string"
+          },
+          {
+            "name": "total_prestamos",
+            "type": "u16"
+          },
+          {
+            "name": "prestamos",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Prestamo",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "socio",
+            "type": "string"
+          },
+          {
+            "name": "nota",
+            "type": "string"
+          },
+          {
+            "name": "dias",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
