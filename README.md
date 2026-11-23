@@ -120,7 +120,7 @@ Capturas en la carpeta `evidencias/`. Transacciones en Devnet:
 | 8 | Eliminar libro sin préstamos | https://explorer.solana.com/tx/4JLmM5qyVQ4yZuRccrqgDW5gey1mPih1nezT5WNGvoKVJpGAsKeNdXeZwV5nXsmoz5jK5abi6RXC3EVJHyfgH9Yp?cluster=devnet |
 
 ## Notas
-- El programa se compiló y desplegó con <<Anchor en Codespaces>>.
+El programa se compiló y desplegó con Anchor en Codespaces en Github
 
 ## Uso de herramientas de IA
 
